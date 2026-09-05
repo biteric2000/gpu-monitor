@@ -1,6 +1,7 @@
 """GPU 监控系统 Server（M4：上报 + 节点列表 + 看板 + 登录 + 预约）。"""
 import sqlite3
 import time
+from collections import deque
 from pathlib import Path
 
 import bcrypt
@@ -22,6 +23,28 @@ app.add_middleware(
 
 # 内存节点表：node_id -> snapshot
 nodes: dict[str, dict] = {}
+
+# 利用率波形图：每卡一个环形缓冲，只留最近 HIST_WINDOW_SEC 秒（内存，不落库）
+HIST_WINDOW_SEC = 1800
+HIST_MAX_POINTS = 600
+
+
+def _push_util_history(snap: dict, gpus: list, now: float) -> dict:
+    """把本次上报的每张卡利用率追加进历史，并清掉窗口外的旧点。"""
+    hist = snap.get("util_history") or {}
+    for g in gpus:
+        if not isinstance(g, dict):
+            continue
+        idx, u = g.get("index"), g.get("util_percent")
+        if idx is None or u is None:
+            continue
+        dq = hist.setdefault(idx, deque(maxlen=HIST_MAX_POINTS))
+        dq.append((round(now, 1), int(u)))
+    cutoff = now - HIST_WINDOW_SEC
+    for dq in hist.values():
+        while dq and dq[0][0] < cutoff:
+            dq.popleft()
+    return hist
 
 
 def _db() -> sqlite3.Connection:
@@ -89,6 +112,16 @@ def _minutes(body_minutes: int | None) -> int:
     return minutes
 
 
+def _minutes_delta(body_minutes: int) -> int:
+    """续期增量：可正可负（+30/+60/-30/-60），绝对值不超单次上限。"""
+    if not (1 <= abs(body_minutes) <= CFG["max_reserve_minutes"]):
+        raise HTTPException(
+            status_code=422,
+            detail=f"minutes 需在 -{CFG['max_reserve_minutes']} 到 {CFG['max_reserve_minutes']} 之间",
+        )
+    return body_minutes
+
+
 def _auth_report(authorization: str | None) -> None:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="missing Bearer token")
@@ -151,6 +184,7 @@ def report(payload: dict, authorization: str | None = Header(None)):
         "error": payload.get("error"),
         "last_seen": now,
         "last_busy_ts": snap.get("last_busy_ts"),
+        "util_history": _push_util_history(snap, gpus, now),
     }
     return {"ok": True}
 
@@ -182,6 +216,7 @@ def get_nodes(request: Request):
             "error": snap["error"],
             "gpus": snap["gpus"],
             "processes": snap["processes"],
+            "util_history": {k: list(v) for k, v in snap.get("util_history", {}).items()},
             "reservation": res,
         })
     # 展示顺序：node_id 优先，相同则按显示名（便于快速定位机器）
@@ -247,16 +282,16 @@ def reserve(req: ReserveRequest, request: Request):
 @app.post("/api/reserve/renew")
 def reserve_renew(req: ReserveRequest, request: Request):
     s = _require_login(request)
-    minutes = _minutes(req.minutes)
+    minutes = _minutes_delta(req.minutes)
     node_id = req.node_id.strip()
     active = _get_active(node_id)
     if active is None:
         raise HTTPException(status_code=404, detail="该节点当前没有有效预约")
     if active["user"] != s["username"]:
         raise HTTPException(status_code=403, detail="只能续期自己的预约")
-    # 在现有到期时间基础上累加（剩余时间已不足 1 分钟则从现在起算）
-    base = max(active["end_ts"], time.time() + 60)
-    end_ts = base + minutes * 60
+    now = time.time()
+    # 在现有到期时间上增减；减到不足 1 分钟则保留最后 1 分钟（不会减成立即过期）
+    end_ts = max(active["end_ts"] + minutes * 60, now + 60)
     with _db() as conn:
         conn.execute(
             "UPDATE reservations SET end_ts = ? WHERE node_id = ?",
