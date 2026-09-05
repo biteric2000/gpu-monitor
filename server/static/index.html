@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPU 监控看板</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="banner" class="banner hidden">⚠ Server 不可达，正在重试…</div>
+  <header>
+    <h1>GPU 节点监控</h1>
+    <span id="update-time" class="muted"></span>
+    <span class="me-box">
+      <span id="user-name" class="muted"></span>
+      <a class="btn" href="/logout">退出</a>
+    </span>
+  </header>
+  <main id="nodes" class="grid">
+    <p class="muted">加载中…</p>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

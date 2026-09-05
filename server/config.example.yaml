@@ -1,0 +1,29 @@
+# 复制为 config.yaml 后填写。
+# 端口、host 由 start_server.bat 读取（bat 调 python main.py，端口只认这里）。
+
+host: "0.0.0.0"
+port: 18123
+
+# Client→Server 共享 Token。所有 client 的 config.token 必须与此一致。
+# 生成: python -c "import secrets; print(secrets.token_hex(16))"
+client_token: "REPLACE_WITH_RANDOM_HEX"
+
+# Session 签名密钥，另一串随机值。
+session_secret: "REPLACE_WITH_ANOTHER_RANDOM_HEX"
+
+# 超过该秒数未上报 → 标记离线（灰点 + 离线徽章）
+offline_threshold_sec: 20
+
+# 预约默认时长 / 单次上限（分钟）
+default_reserve_minutes: 30
+max_reserve_minutes: 480
+
+# 账号。password_hash 用 bcrypt，不存明文。
+# 生成: python -c "import bcrypt; print(bcrypt.hashpw(input('pwd: ').encode(), bcrypt.gensalt()).decode())"
+users:
+  - username: admin
+    password_hash: "REPLACE_WITH_BCRYPT_HASH"
+    role: admin
+  - username: alice
+    password_hash: "REPLACE_WITH_BCRYPT_HASH"
+    role: user

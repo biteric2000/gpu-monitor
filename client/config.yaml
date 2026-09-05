@@ -1,0 +1,5 @@
+server_url: "http://127.0.0.1:8000"
+token: "7cc6cf74b134685e58c6faba93df2541"
+interval_sec: 5
+node_id: ""
+display_name: ""

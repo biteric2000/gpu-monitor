@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pyyaml
+bcrypt
+itsdangerous

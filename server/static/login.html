@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 · GPU 监控看板</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-body">
+  <form id="login-form" class="card login-card" autocomplete="off">
+    <h1 class="login-title">GPU 监控看板</h1>
+    <p class="muted">请登录以查看节点</p>
+    <label class="login-field">用户名
+      <input name="username" required autocomplete="username">
+    </label>
+    <label class="login-field">密码
+      <input name="password" type="password" required autocomplete="current-password">
+    </label>
+    <button type="submit" id="login-btn">登录</button>
+    <p id="login-error" class="login-error hidden"></p>
+  </form>
+  <script>
+    const form = document.getElementById("login-form");
+    const errEl = document.getElementById("login-error");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errEl.classList.add("hidden");
+      const btn = document.getElementById("login-btn");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: form.username.value,
+            password: form.password.value
+          })
+        });
+        if (res.redirected || res.ok) {
+          location.href = "/";
+          return;
+        }
+        let msg = "登录失败（HTTP " + res.status + "）";
+        try { msg = (await res.json()).detail || msg; } catch (_) {}
+        errEl.textContent = msg;
+        errEl.classList.remove("hidden");
+      } catch (err) {
+        errEl.textContent = "Server 不可达";
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

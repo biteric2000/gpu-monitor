@@ -1,0 +1,227 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+  background: #12141a;
+  color: #e6e8ee;
+}
+.muted { color: #8a90a0; font-size: 0.85em; }
+
+.banner {
+  background: #b3261e;
+  color: #fff;
+  text-align: center;
+  padding: 8px;
+  font-weight: bold;
+}
+.hidden { display: none; }
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 20px 6px;
+}
+header h1 { font-size: 1.3em; margin: 0; }
+header .me-box { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.btn {
+  display: inline-block;
+  background: #2a2e3b;
+  color: #e6e8ee;
+  border: 1px solid #3a3f4f;
+  border-radius: 6px;
+  padding: 4px 14px;
+  font-size: 0.88em;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { background: #343a4a; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+  gap: 16px;
+  padding: 12px 20px 24px;
+}
+
+.card {
+  background: #1c1f28;
+  border: 1px solid #2a2e3b;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.card-head { display: flex; align-items: center; gap: 8px; }
+.card-head h2 { font-size: 1.05em; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.node-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 预约/占用状态徽章：醒目色块，与左侧在线小圆点区分 */
+.badge {
+  margin-left: auto;
+  flex: none;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.88em;
+  white-space: nowrap;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.badge-busy { background: #d23b3f; box-shadow: 0 0 8px rgba(210,59,63,0.5); }
+.badge-free { background: #1f7a45; }
+.badge-off { background: #555b68; }
+.badge-recent { background: #b8860b; box-shadow: 0 0 8px rgba(184,134,11,0.5); }
+
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.dot-green { background: #35c46a; box-shadow: 0 0 6px #35c46a; }
+.dot-red { background: #e5484d; box-shadow: 0 0 6px #e5484d; }
+.dot-gray { background: #555b68; }
+
+.node-error {
+  background: #3a2a17;
+  border: 1px solid #7a5526;
+  color: #f0b25a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 10px 0;
+  font-size: 0.9em;
+}
+
+.gpu { margin-top: 12px; }
+.gpu-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gpu-name { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gpu-temps { display: flex; gap: 12px; font-size: 0.88em; color: #b8bdcb; white-space: nowrap; }
+
+.bar-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.bar {
+  flex: 1;
+  height: 10px;
+  background: #2a2e3b;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bar-fill { height: 100%; background: #3b82f6; border-radius: 5px; transition: width 0.4s; }
+.bar-label { width: 44px; text-align: right; font-size: 0.9em; font-variant-numeric: tabular-nums; }
+/* 显存血条：绿→黄→橙（非红色系） */
+.bar-mem { height: 12px; }
+.bar-mem .bar-fill { background: #35c46a; }
+.bar-fill-high { background: #f0b25a !important; }
+.bar-fill-crit { background: #f0883e !important; }
+.mem-detail { margin-top: 2px; }
+
+.proc-title { margin-top: 14px; font-size: 0.9em; color: #b8bdcb; }
+.procs {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0 4px 0 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.procs li {
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 0.88em;
+  margin-bottom: 3px;
+  background: #222633;
+}
+.proc-name { font-weight: bold; }
+.proc-llm { background: #2c2438; border: 1px solid #6d4d9e; }
+.proc-llm .proc-name { font-weight: bold; color: #d4b8ff; }
+.llm-tag {
+  background: #6d4d9e;
+  color: #fff;
+  font-size: 0.75em;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
+
+.login-body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-card { width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.login-title { margin: 0; font-size: 1.25em; text-align: center; }
+.login-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.9em; }
+.login-field input {
+  background: #12141a;
+  border: 1px solid #3a3f4f;
+  border-radius: 6px;
+  color: #e6e8ee;
+  padding: 8px 10px;
+  font-size: 1em;
+}
+.login-field input:focus { outline: none; border-color: #3b82f6; }
+.login-error { color: #ff7b72; font-size: 0.9em; margin: 0; text-align: center; }
+
+.reserve-box {
+  margin-top: 14px;
+  border: 1px dashed #3a3f4f;
+  border-radius: 6px;
+  padding: 8px 10px;
+  text-align: center;
+  font-size: 0.9em;
+}
+.reserve-btns { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 4px; align-items: center; }
+.custom-min {
+  width: 70px;
+  background: #12141a;
+  border: 1px solid #3a3f4f;
+  border-radius: 6px;
+  color: #e6e8ee;
+  padding: 4px 8px;
+  font-size: 0.95em;
+}
+.custom-min:focus { outline: none; border-color: #3b82f6; }
+.reserve-ok {
+  color: #7fe0a2;
+  background: #173322;
+  border: 1px solid #2f6b45;
+  border-radius: 5px;
+  padding: 4px 8px;
+  margin-top: 6px;
+  font-size: 0.9em;
+}
+.reserve-err {
+  color: #ff9d9a;
+  background: #3a1d1d;
+  border: 1px solid #6e3030;
+  border-radius: 5px;
+  padding: 4px 8px;
+  margin-top: 6px;
+  font-size: 0.9em;
+}
+/* 顶部自动消失的提醒条（非阻塞） */
+#toast {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%) translateY(-16px);
+  background: #24304a;
+  border: 1px solid #3b82f6;
+  color: #eaf1ff;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.95em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 99;
+  max-width: 80vw;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* 距上次活跃时间（GPU 计算占用 ≥50% 的最近一次） */
+.busy-line {
+  margin: 2px 0 8px;
+  font-size: 0.92em;
+}
+.busy-recent {
+  color: #ff6b5e;
+  font-weight: 700;
+  background: #3a1d1d;
+  border: 1px solid #7a2f2f;
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+.btn-danger { background: #57262a; border-color: #8a3a40; color: #ffc2bf; }
+.btn-danger:hover { background: #6e2f35; }
+.admin-row { margin-top: 10px; text-align: right; }
+.btn-admin { font-size: 0.8em; padding: 2px 10px; opacity: 0.75; }
+.btn-admin:hover { opacity: 1; background: #57262a; border-color: #8a3a40; color: #ffc2bf; }

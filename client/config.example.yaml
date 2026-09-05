@@ -1,0 +1,17 @@
+# 复制为 config.yaml 后填写。
+
+# Server 地址（浏览器访问用的同一台/同端口）
+server_url: "http://192.168.1.10:18123"
+
+# 与 server config.yaml 的 client_token 一致
+token: "REPLACE_WITH_SAME_TOKEN_AS_SERVER"
+
+# 上报间隔（秒）
+interval_sec: 5
+
+# 节点 ID：看板主键 + 预约对象。
+# 留空则用 hostname；多机同名时必须手填，避免冲突。
+node_id: ""
+
+# 看板显示名，留空则用 node_id
+display_name: ""

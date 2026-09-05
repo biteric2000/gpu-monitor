@@ -1,0 +1,14 @@
+host: "0.0.0.0"
+port: 18123
+client_token: "7cc6cf74b134685e58c6faba93df2541"
+session_secret: "fd415db19da18c023b0f5c2cd07a3447"
+offline_threshold_sec: 20
+default_reserve_minutes: 30
+max_reserve_minutes: 480
+users:
+  - username: admin
+    password_hash: "$2b$12$3UzO0HkIr4AtNO2.EDaJ..8rFS7MXLXFiqcgD59F4OJtvuVq7L42y"
+    role: admin
+  - username: alice
+    password_hash: "$2b$12$Jb75xGW4WUH1mOUHeaC2.uOgP84C1j.ISKBvaUY6Of71dYEWTFMHa"
+    role: user
