@@ -123,6 +123,7 @@ canvas.spark {
   padding: 0 4px 0 0;
   max-height: 280px;
   overflow-y: auto;
+  overflow-x: hidden;  /* 禁横向滚动；长路径靠 li 的 overflow-wrap 换行 */
 }
 .procs li {
   padding: 4px 8px;
@@ -130,6 +131,7 @@ canvas.spark {
   font-size: 0.88em;
   margin-bottom: 3px;
   background: #222633;
+  overflow-wrap: anywhere;  /* 长路径换行，不出横向滚动条 */
 }
 .proc-name { font-weight: bold; }
 .proc-llm { background: #2c2438; border: 1px solid #6d4d9e; }
