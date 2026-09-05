@@ -16,7 +16,8 @@
 | 在线状态 | 超 20 秒未上报 → 灰点 +「离线」徽章 |
 | 近期活跃提醒 | 半小时内计算占用 ≥50% 但没人预约 → 黄色「近期活跃」徽章 + 红色「距上次活跃 x 分钟前」，提示可能有人忘了释放 |
 | 登录 | Session Cookie；账号在 `config.yaml`（bcrypt 哈希） |
-| 预约 | 整机独占；30m / 1h / 2h / 自定义（≤8h）；本人可续期（在剩余时间上累加）、提前释放；到期自动失效 |
+| 预约 | 整机独占；30m / 1h / 2h / 自定义（≤8h）；本人可续期（±30m/±1h 按钮增减到期时间，减到不足 1 分钟钳住不失效）、提前释放；到期自动失效 |
+| 利用率波形 | 每卡最近 30 分钟利用率小波形图（内存采样，5s 一个点，不落库；重启清零） |
 | 冲突处理 | 他人占用中禁止抢占（409）；admin 可强制释放 |
 | 节点管理 | admin 可手动移除过时节点（两段式确认）；同一台机器改 node_id 后凭机器指纹自动合并，不留幽灵条目 |
 | 节点排序 | 看板按 node_id 升序（相同则按显示名），便于快速定位 |
@@ -124,7 +125,7 @@ start_client.bat
 | POST | `/api/report` | `Authorization: Bearer <token>` | Client 上报快照 |
 | GET | `/api/nodes` | 已登录 | 节点 + 在线状态 + 有效预约（含 `mine` 标记） |
 | POST | `/api/reserve` | 已登录 | body: `{node_id, minutes?}`；本人重复预约 = 重新计时 |
-| POST | `/api/reserve/renew` | 已登录 | 本人在**现有到期时间上累加** minutes |
+| POST | `/api/reserve/renew` | 已登录 | 本人在现有到期时间上增减 minutes（可负，±1~480）；减到不足 1 分钟钳到 1 分钟 |
 | POST | `/api/reserve/release` | 已登录 | 本人释放；admin 可释放任意节点 |
 | POST | `/api/node/remove` | admin | 移除过时节点 |
 | POST | `/login` / `GET /logout` | — | Session |
@@ -140,6 +141,7 @@ start_client.bat
 ## 设计取舍（为什么这么简单）
 
 - **不引入 APScheduler**：预约过期在读接口时按 `end_ts` 判断
+- **波形图不引图表库**：server 内存 deque 存 30 分钟采样，前端 canvas 手绘 sparkline
 - **不引入 ORM**：SQLite 单表 + 标准库 `sqlite3`
 - **指标不落库**：5 秒一刷的快照存内存 dict；要历史曲线是二期
 - **NVML 不走 subprocess**：`nvidia-ml-py` 直接调用，`pythonw` 下无黑窗口
