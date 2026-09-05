@@ -37,7 +37,7 @@ function fmtAgo(ts) {
   return Math.floor(s / 86400) + "天前";
 }
 
-function gpuRow(g) {
+function gpuRow(g, hist) {
   const util = g.util_percent ?? 0;
   const temp = g.temperature_c == null ? "--" : g.temperature_c + "°C";
   const power = g.power_w == null ? "--" : g.power_w.toFixed(1) + " W";
@@ -56,12 +56,54 @@ function gpuRow(g) {
         <div class="bar"><div class="bar-fill" style="width:${Math.min(util, 100)}%"></div></div>
         <span class="bar-label">${util}%</span>
       </div>
+      <canvas class="spark" data-gpu="${g.index}" data-hist='${JSON.stringify(hist || [])}'></canvas>
       <div class="bar-row">
         <div class="bar bar-mem"><div class="bar-fill ${memCls}" style="width:${pct}%"></div></div>
         <span class="bar-label" title="${g.mem_used_mb} / ${g.mem_total_mb} MB">${pct}%</span>
       </div>
       <div class="muted mem-detail">显存 ${g.mem_used_mb} / ${g.mem_total_mb} MB</div>
     </div>`;
+}
+
+function drawSparks() {
+  // 每次轮询重绘所有卡的小波形图（最近 30 分钟利用率，看个大概）
+  const now = Date.now() / 1000;
+  const WINDOW = 1800; // 秒，与 server 端 HIST_WINDOW_SEC 对应
+  document.querySelectorAll("canvas.spark").forEach((cv) => {
+    const pts = JSON.parse(cv.dataset.hist || "[]");
+    const W = (cv.width = cv.clientWidth * devicePixelRatio || 1);
+    const H = (cv.height = 46 * devicePixelRatio);
+    const ctx = cv.getContext("2d");
+    ctx.clearRect(0, 0, W, H);
+    if (!pts.length) return;
+    const x0 = now - WINDOW;
+    const X = (t) => ((t - x0) / WINDOW) * W;
+    const Y = (u) => H - (u / 100) * (H - 4) - 2;
+    // 填充面
+    ctx.beginPath();
+    ctx.moveTo(X(pts[0][0]), Y(pts[0][1]));
+    for (const [t, u] of pts) ctx.lineTo(X(t), Y(u));
+    ctx.lineTo(X(pts[pts.length - 1][0]), H);
+    ctx.lineTo(X(pts[0][0]), H);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(59,130,246,0.18)";
+    ctx.fill();
+    // 折线
+    ctx.beginPath();
+    ctx.moveTo(X(pts[0][0]), Y(pts[0][1]));
+    for (const [t, u] of pts) ctx.lineTo(X(t), Y(u));
+    ctx.strokeStyle = "#3b82f6";
+    ctx.lineWidth = devicePixelRatio;
+    ctx.stroke();
+    // 50% 参考虚线
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(0, Y(50));
+    ctx.lineTo(W, Y(50));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
 }
 
 function procRow(p) {
@@ -108,8 +150,10 @@ function reserveBox(n) {
   let btns = "";
   if (r.mine) {
     btns = `
-      <button class="btn" ${nodeAttr} data-action="renew" data-minutes="30">续期30m</button>
-      <button class="btn" ${nodeAttr} data-action="renew" data-minutes="60">续期1h</button>
+      <button class="btn delta" title="减少 30 分钟" ${nodeAttr} data-action="renew" data-minutes="-30">−30m</button>
+      <button class="btn delta" title="减少 1 小时" ${nodeAttr} data-action="renew" data-minutes="-60">−1h</button>
+      <button class="btn delta" title="增加 30 分钟" ${nodeAttr} data-action="renew" data-minutes="30">+30m</button>
+      <button class="btn delta" title="增加 1 小时" ${nodeAttr} data-action="renew" data-minutes="60">+1h</button>
       <button class="btn" ${nodeAttr} data-action="release">释放</button>`;
   } else if (ME.role === "admin") {
     btns = `<button class="btn btn-danger" ${nodeAttr} data-action="release">强制释放</button>`;
@@ -158,14 +202,15 @@ async function doReserve(nodeId, action, minutes, custom) {
       cardErrors[nodeId] = data.detail || `HTTP ${res.status}`;
     } else {
       delete cardErrors[nodeId];
+      const sign = minutes >= 0 ? `+${minutes}` : String(minutes);
       flashes[nodeId] = {
         msg: action === "release" ? "已释放"
-            : action === "renew" ? `已续期 +${minutes} 分钟，至 ${fmtTime(data.end_ts)}`
+            : action === "renew" ? `已调整 ${sign} 分钟，至 ${fmtTime(data.end_ts)}`
             : `已预约 ${minutes} 分钟，至 ${fmtTime(data.end_ts)}`,
         until: Date.now() + 6000,
       };
       if (action === "reserve") showToast(`已预约 ${minutes} 分钟，至 ${fmtTime(data.end_ts)}。用完请及时释放。`, 10000);
-      if (action === "renew") showToast(`已续期 +${minutes} 分钟，至 ${fmtTime(data.end_ts)}。用完请及时释放。`, 10000);
+      if (action === "renew") showToast(`已续期 ${sign} 分钟，至 ${fmtTime(data.end_ts)}。用完请及时释放。`, 10000);
     }
   } catch (_) {
     cardErrors[nodeId] = "Server 不可达";
@@ -211,7 +256,7 @@ function nodeCard(n) {
     : '<span class="badge badge-free">空闲</span>';
   const err = n.error
     ? `<div class="node-error">无 GPU 数据：${esc(n.error)}</div>` : "";
-  const gpus = (n.gpus || []).map(gpuRow).join("");
+  const gpus = (n.gpus || []).map(g => gpuRow(g, (n.util_history || {})[g.index])).join("");
   const procs = (n.processes || [])
     .slice()
     .sort((a, b) => (b.mem_mb || 0) - (a.mem_mb || 0) || (a.pid || 0) - (b.pid || 0))
@@ -257,6 +302,7 @@ async function refresh() {
     main.innerHTML = data.length
       ? data.map(nodeCard).join("")
       : '<p class="muted">暂无节点上报。</p>';
+    drawSparks();
   } catch (e) {
     banner.classList.remove("hidden");
   }

@@ -100,6 +100,15 @@ header .me-box { margin-left: auto; display: flex; align-items: center; gap: 10p
 }
 .bar-fill { height: 100%; background: #3b82f6; border-radius: 5px; transition: width 0.4s; }
 .bar-label { width: 44px; text-align: right; font-size: 0.9em; font-variant-numeric: tabular-nums; }
+/* 利用率波形图（最近 30 分钟，canvas 手绘） */
+canvas.spark {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin: 4px 0 2px;
+  background: #171a22;
+  border-radius: 4px;
+}
 /* 显存血条：绿→黄→橙（非红色系） */
 .bar-mem { height: 12px; }
 .bar-mem .bar-fill { background: #35c46a; }
@@ -222,6 +231,14 @@ header .me-box { margin-left: auto; display: flex; align-items: center; gap: 10p
 }
 .btn-danger { background: #57262a; border-color: #8a3a40; color: #ffc2bf; }
 .btn-danger:hover { background: #6e2f35; }
+/* 续期 ± 按钮：带框的加减号 */
+.btn.delta {
+  min-width: 58px;
+  border: 1.5px solid #4a5165;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+.btn.delta:hover { border-color: #7c8aa5; background: #343a4a; }
 .admin-row { margin-top: 10px; text-align: right; }
 .btn-admin { font-size: 0.8em; padding: 2px 10px; opacity: 0.75; }
 .btn-admin:hover { opacity: 1; background: #57262a; border-color: #8a3a40; color: #ffc2bf; }
